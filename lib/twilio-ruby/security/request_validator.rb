@@ -10,6 +10,7 @@ module Twilio
       # @param [String] auth_token Your account auth token, used to sign requests
       def initialize(auth_token = nil)
         @auth_token = auth_token || Twilio.auth_token
+        @auth_token = @auth_token.is_a?(Array) ? @auth_token : [@auth_token]
         raise ArgumentError, 'Auth token is required' if @auth_token.nil?
       end
 
@@ -40,10 +41,12 @@ module Twilio
 
         # Check signature of the url with and without port numbers
         # since signature generation on the back end is inconsistent
-        valid_signature_with_port = secure_compare(build_signature_for(url_with_port, params_hash), signature)
-        valid_signature_without_port = secure_compare(build_signature_for(url_without_port, params_hash), signature)
+        @auth_token.map do |auth_token|
+          valid_signature_with_port = secure_compare(build_signature_for(url_with_port, params_hash), signature)
+          valid_signature_without_port = secure_compare(build_signature_for(url_without_port, params_hash), signature)
 
-        valid_body && (valid_signature_with_port || valid_signature_without_port)
+          valid_body && (valid_signature_with_port || valid_signature_without_port)
+        end.include?(true)
       end
 
       ##
