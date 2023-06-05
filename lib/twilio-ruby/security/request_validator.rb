@@ -41,9 +41,9 @@ module Twilio
 
         # Check signature of the url with and without port numbers
         # since signature generation on the back end is inconsistent
-        @auth_token.map do |auth_token|
-          valid_signature_with_port = secure_compare(build_signature_for(url_with_port, params_hash), signature)
-          valid_signature_without_port = secure_compare(build_signature_for(url_without_port, params_hash), signature)
+        @auth_token.map do |token|
+          valid_signature_with_port = secure_compare(build_signature_for(url: url_with_port, token: token, params: params_hash), signature)
+          valid_signature_without_port = secure_compare(build_signature_for(url: url_without_port, token: token, params: params_hash), signature)
 
           valid_body && (valid_signature_with_port || valid_signature_without_port)
         end.include?(true)
@@ -67,10 +67,10 @@ module Twilio
       # @param [#join] params The POST parameters
       #
       # @return [String] A base64 encoded SHA1-HMAC
-      def build_signature_for(url, params)
+      def build_signature_for(url:, token:, params:)
         data = url + params.sort.join
         digest = OpenSSL::Digest.new('sha1')
-        Base64.strict_encode64(OpenSSL::HMAC.digest(digest, @auth_token, data))
+        Base64.strict_encode64(OpenSSL::HMAC.digest(digest, token, data))
       end
 
       private
